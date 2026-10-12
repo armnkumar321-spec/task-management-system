@@ -46,11 +46,13 @@ export const useTasks = () => {
       const matchesStatus = statusFilter === 'ALL' || task.status === statusFilter;
 
       // -------------------------------------------------------------
-      // ISSUE 3 (TODO for Contributor): Priority Filter
-      // BUG: The priority filter dropdown changes state, but this check
-      // always evaluates to true instead of matching task.priority === priorityFilter.
+      // ISSUE 3 — Priority Filter (FIXED)
+      // When priorityFilter is 'ALL' every task passes; otherwise only tasks
+      // whose priority exactly matches the selected value are shown.
+      // Optional chaining guards against tasks with a missing/null priority.
       // -------------------------------------------------------------
-      const matchesPriority = true; // FIXME: When priorityFilter !== 'ALL', match task.priority === priorityFilter
+      const matchesPriority =
+        priorityFilter === 'ALL' || (task.priority ?? null) === priorityFilter;
 
       return matchesSearch && matchesStatus && matchesPriority;
     });
