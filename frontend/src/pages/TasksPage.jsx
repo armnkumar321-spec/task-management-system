@@ -29,6 +29,21 @@ export const TasksPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
+  // Wrap filter setters to reset page whenever the filter changes.
+  // This prevents landing on a blank page when the new result set is smaller.
+  const handleSetPriorityFilter = (value) => {
+    setPriorityFilter(value);
+    setCurrentPage(1);
+  };
+  const handleSetStatusFilter = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+  const handleSetSearchQuery = (value) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
   const handleStatusChange = async (taskId, newStatus) => {
     try {
       await taskService.updateStatus(taskId, newStatus);
@@ -85,11 +100,11 @@ export const TasksPage = () => {
       {/* Search and Filters Bar (Issues 1, 2, 3) */}
       <TaskFilters
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        setSearchQuery={handleSetSearchQuery}
         statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
+        setStatusFilter={handleSetStatusFilter}
         priorityFilter={priorityFilter}
-        setPriorityFilter={setPriorityFilter}
+        setPriorityFilter={handleSetPriorityFilter}
       />
 
       {loading ? (
