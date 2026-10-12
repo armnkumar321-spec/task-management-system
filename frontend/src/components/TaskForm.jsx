@@ -4,6 +4,34 @@ import taskService from '../services/taskService';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle } from 'lucide-react';
 
+const validateField = (name, value, badInput = false) => {
+  if (name === 'title') {
+    if (!value.trim()) return 'Task title is required';
+    if (value.trim().length > 120) return 'Task title must be 120 characters or fewer';
+  }
+
+  if (name === 'description' && value.trim().length > 2000) {
+    return 'Description must be 2,000 characters or fewer';
+  }
+
+  if (name === 'dueDate') {
+    if (badInput) return 'Enter a valid due date';
+    if (value) {
+      const date = new Date(`${value}T00:00:00Z`);
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+        value.startsWith('0000-') ||
+        Number.isNaN(date.getTime()) ||
+        date.toISOString().slice(0, 10) !== value
+      ) {
+        return 'Enter a valid due date';
+      }
+    }
+  }
+
+  return '';
+};
+
 export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false }) => {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
@@ -21,11 +49,7 @@ export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false })
   const [usersLoading, setUsersLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  // -------------------------------------------------------------
-  // ISSUE 4 (TODO for Contributor): Add client-side validation state
-  // Currently, validation error messages state is omitted.
-  // -------------------------------------------------------------
-  // const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     // If admin, load eligible users for assignment
@@ -51,27 +75,39 @@ export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false })
       ...prev,
       [name]: value,
     }));
+    const error = validateField(name, value, e.target.validity?.badInput);
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      if (error) next[name] = error;
+      else delete next[name];
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setServerError('');
 
-    // -------------------------------------------------------------
-    // ISSUE 4 (TODO for Contributor): Add client-side task form validation
-    // BUG / LIMITATION:
-    // Missing validation before submission:
-    // 1. Title is required and cannot be only whitespace.
-    // 2. Description length must be checked (< 2000 characters).
-    // 3. Due date should be a valid date if provided.
-    // 4. Form should show clear inline error messages and stop submission.
-    // -------------------------------------------------------------
+    const validationErrors = {};
+    for (const name of ['title', 'description', 'dueDate']) {
+      const input = e.currentTarget.elements.namedItem(name);
+      const error = validateField(name, formData[name], input.validity?.badInput);
+      if (error) validationErrors[name] = error;
+    }
+    setErrors(validationErrors);
+    const firstInvalidField = Object.keys(validationErrors)[0];
+    if (firstInvalidField) {
+      e.currentTarget.elements.namedItem(firstInvalidField).focus();
+      return;
+    }
 
     // ISSUE 5: Complete Admin task assignment functionality
     // Include assignedTo in submission payload if admin
     const payload = {
-      title: formData.title,
-      description: formData.description,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
       status: formData.status,
       priority: formData.priority,
       dueDate: formData.dueDate || null,
@@ -91,7 +127,7 @@ export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false })
   return (
     <div className="form-card">
       {serverError && (
-        <div className="form-error-text" style={{ marginBottom: '1.25rem', padding: '0.75rem', backgroundColor: 'var(--danger-bg)', borderRadius: '6px' }}>
+        <div role="alert" className="form-error-text" style={{ marginBottom: '1.25rem', padding: '0.75rem', backgroundColor: 'var(--danger-bg)', borderRadius: '6px' }}>
           <AlertCircle size={16} />
           <span>{serverError}</span>
         </div>
@@ -107,12 +143,15 @@ export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false })
             id="title"
             name="title"
             type="text"
-            className="form-input"
+            className={`form-input${errors.title ? ' error' : ''}`}
+            required
+            aria-invalid={Boolean(errors.title)}
+            aria-describedby={errors.title ? 'title-error' : undefined}
             placeholder="e.g. Implement user authentication flow"
             value={formData.title}
             onChange={handleChange}
           />
-          {/* FIXME (Issue 4): Render inline validation error for title here */}
+          {errors.title && <p id="title-error" role="alert" className="form-error-text">{errors.title}</p>}
         </div>
 
         {/* Description Textarea */}
@@ -124,12 +163,14 @@ export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false })
             id="description"
             name="description"
             rows={4}
-            className="form-textarea"
+            className={`form-textarea${errors.description ? ' error' : ''}`}
+            aria-invalid={Boolean(errors.description)}
+            aria-describedby={errors.description ? 'description-error' : undefined}
             placeholder="Provide context, acceptance criteria, or requirements..."
             value={formData.description}
             onChange={handleChange}
           />
-          {/* FIXME (Issue 4): Render inline validation error for description here */}
+          {errors.description && <p id="description-error" role="alert" className="form-error-text">{errors.description}</p>}
         </div>
 
         {/* Status and Priority Row */}
@@ -179,11 +220,13 @@ export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false })
               id="dueDate"
               name="dueDate"
               type="date"
-              className="form-input"
+              className={`form-input${errors.dueDate ? ' error' : ''}`}
+              aria-invalid={Boolean(errors.dueDate)}
+              aria-describedby={errors.dueDate ? 'dueDate-error' : undefined}
               value={formData.dueDate}
               onChange={handleChange}
             />
-            {/* FIXME (Issue 4): Render inline validation error for dueDate here */}
+            {errors.dueDate && <p id="dueDate-error" role="alert" className="form-error-text">{errors.dueDate}</p>}
           </div>
 
           {isAdmin && (
