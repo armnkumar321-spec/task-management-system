@@ -4,12 +4,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 /**
  * Pagination Component
  * 
- * -------------------------------------------------------------
- * ISSUE 6 (TODO for Contributor): Add pagination to the task list
- * BUG / LIMITATION:
- * The pagination bar is rendered below, but tasks are not sliced by page size,
- * and page transitions are currently non-functional (stuck on page 1 of 1).
- * -------------------------------------------------------------
+ * Implements Issue #6: Dynamic page count calculation,
+ * previous/next page navigation, disabled button states,
+ * and displaying current page slice information.
  */
 export const Pagination = ({
   currentPage = 1,
@@ -17,25 +14,28 @@ export const Pagination = ({
   pageSize = 5,
   onPageChange = () => {},
 }) => {
-  // FIXME (Issue 6): Compute totalPages dynamically using Math.ceil(totalItems / pageSize)
-  const totalPages = 1; 
+  if (totalItems === 0) return null;
+
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
 
   const handlePrevious = () => {
-    // FIXME (Issue 6): Implement previous page transition if currentPage > 1
-    console.log('Previous page clicked - Issue 6 pending implementation');
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
   };
 
   const handleNext = () => {
-    // FIXME (Issue 6): Implement next page transition if currentPage < totalPages
-    console.log('Next page clicked - Issue 6 pending implementation');
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+    }
   };
-
-  if (totalItems === 0) return null;
 
   return (
     <div className="pagination-bar">
       <div>
-        Showing <strong>{totalItems}</strong> total {totalItems === 1 ? 'task' : 'tasks'} (all displayed)
+        Showing <strong>{startItem}–{endItem}</strong> of <strong>{totalItems}</strong> {totalItems === 1 ? 'task' : 'tasks'}
       </div>
 
       <div className="pagination-controls">
@@ -43,9 +43,10 @@ export const Pagination = ({
           Page {currentPage} of {totalPages}
         </span>
         <button
+          type="button"
           className="btn btn-secondary btn-sm"
           onClick={handlePrevious}
-          disabled={true} // FIXME (Issue 6): Enable when currentPage > 1
+          disabled={currentPage <= 1}
           aria-label="Previous Page"
         >
           <ChevronLeft size={16} />
@@ -53,9 +54,10 @@ export const Pagination = ({
         </button>
 
         <button
+          type="button"
           className="btn btn-secondary btn-sm"
           onClick={handleNext}
-          disabled={true} // FIXME (Issue 6): Enable when currentPage < totalPages
+          disabled={currentPage >= totalPages}
           aria-label="Next Page"
         >
           <span>Next</span>
@@ -67,3 +69,4 @@ export const Pagination = ({
 };
 
 export default Pagination;
+

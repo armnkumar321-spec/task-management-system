@@ -10,9 +10,12 @@ export const CreateTaskPage = () => {
 
   const handleCreateTask = async (payload) => {
     setIsSubmitting(true);
-    await taskService.createTask(payload);
-    setIsSubmitting(false);
-    navigate('/tasks');
+    try {
+      await taskService.createTask(payload);
+      navigate('/tasks');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

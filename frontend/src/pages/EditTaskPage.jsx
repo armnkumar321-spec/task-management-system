@@ -30,9 +30,12 @@ export const EditTaskPage = () => {
 
   const handleUpdateTask = async (payload) => {
     setIsSubmitting(true);
-    await taskService.updateTask(id, payload);
-    setIsSubmitting(false);
-    navigate(`/tasks/${id}`);
+    try {
+      await taskService.updateTask(id, payload);
+      navigate('/tasks');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {

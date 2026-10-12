@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Task from '../models/Task.js';
+import User from '../models/User.js';
 
 /**
  * @desc    Create a new task
@@ -17,6 +18,25 @@ export const createTask = async (req, res, next) => {
       });
     }
 
+    // Validate assignedTo if provided
+    let validAssignee = null;
+    if (assignedTo) {
+      if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid assignee user ID format',
+        });
+      }
+      const userExists = await User.findById(assignedTo);
+      if (!userExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'Assignee user not found',
+        });
+      }
+      validAssignee = assignedTo;
+    }
+
     // Prepare task data
     const taskData = {
       title: title.trim(),
@@ -24,7 +44,7 @@ export const createTask = async (req, res, next) => {
       status: status || 'TODO',
       priority: priority || 'MEDIUM',
       dueDate: dueDate || null,
-      assignedTo: assignedTo && mongoose.Types.ObjectId.isValid(assignedTo) ? assignedTo : null,
+      assignedTo: validAssignee,
       createdBy: req.user._id,
     };
 
@@ -160,7 +180,24 @@ export const updateTask = async (req, res, next) => {
     if (priority !== undefined) updateData.priority = priority;
     if (dueDate !== undefined) updateData.dueDate = dueDate || null;
     if (assignedTo !== undefined) {
-      updateData.assignedTo = assignedTo && mongoose.Types.ObjectId.isValid(assignedTo) ? assignedTo : null;
+      if (assignedTo) {
+        if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid assignee user ID format',
+          });
+        }
+        const userExists = await User.findById(assignedTo);
+        if (!userExists) {
+          return res.status(400).json({
+            success: false,
+            message: 'Assignee user not found',
+          });
+        }
+        updateData.assignedTo = assignedTo;
+      } else {
+        updateData.assignedTo = null;
+      }
     }
 
     task = await Task.findByIdAndUpdate(id, updateData, {

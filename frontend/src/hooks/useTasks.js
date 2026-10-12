@@ -35,20 +35,15 @@ export const useTasks = () => {
    * Several filter features are intentionally left incomplete for Assignment 4 issues.
    */
   const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      // -------------------------------------------------------------
-      // ISSUE 1 (TODO for Contributor): Task Search by Title and Description
-      // BUG: Currently searchQuery is accepted by the UI, but this filter
-      // always evaluates to true, ignoring user input.
-      // -------------------------------------------------------------
-      const matchesSearch = true; // FIXME: Check if task.title or task.description includes searchQuery (case-insensitive)
+    const query = searchQuery.trim().toLowerCase();
 
-      // -------------------------------------------------------------
-      // ISSUE 2 (TODO for Contributor): Task Status Filter
-      // BUG: The status filter dropdown changes state, but this check
-      // always evaluates to true instead of matching task.status === statusFilter.
-      // -------------------------------------------------------------
-      const matchesStatus = true; // FIXME: When statusFilter !== 'ALL', match task.status === statusFilter
+    return tasks.filter((task) => {
+      const matchesSearch =
+        !query ||
+        (task.title || '').toLowerCase().includes(query) ||
+        (task.description || '').toLowerCase().includes(query);
+
+      const matchesStatus = statusFilter === 'ALL' || task.status === statusFilter;
 
       // -------------------------------------------------------------
       // ISSUE 3 — Priority Filter (FIXED)

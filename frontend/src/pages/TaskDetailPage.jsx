@@ -163,7 +163,9 @@ export const TaskDetailPage = () => {
               <span>Assigned To</span>
             </div>
             <strong style={{ fontSize: '0.9375rem' }}>
-              {task.assignedTo ? `${task.assignedTo.name} (${task.assignedTo.email})` : 'Unassigned'}
+              {task.assignedTo?.name
+                ? `${task.assignedTo.name}${task.assignedTo.email ? ` (${task.assignedTo.email})` : ''}`
+                : 'Unassigned'}
             </strong>
           </div>
 
