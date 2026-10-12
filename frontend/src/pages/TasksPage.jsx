@@ -29,6 +29,28 @@ export const TasksPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
+  const [prevFilterState, setPrevFilterState] = useState({
+    searchQuery,
+    statusFilter,
+    priorityFilter,
+  });
+
+  // Reset to page 1 whenever search query or filters change
+  if (
+    prevFilterState.searchQuery !== searchQuery ||
+    prevFilterState.statusFilter !== statusFilter ||
+    prevFilterState.priorityFilter !== priorityFilter
+  ) {
+    setPrevFilterState({ searchQuery, statusFilter, priorityFilter });
+    setCurrentPage(1);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / pageSize));
+  // Adjust currentPage if task count decreases and currentPage exceeds totalPages
+  if (currentPage > totalPages) {
+    setCurrentPage(totalPages);
+  }
+
   const handleStatusChange = async (taskId, newStatus) => {
     try {
       await taskService.updateStatus(taskId, newStatus);
@@ -54,16 +76,17 @@ export const TasksPage = () => {
   };
 
   /**
-   * -------------------------------------------------------------
-   * ISSUE 6 (TODO for Contributor): Add pagination to the task list
-   * BUG: Tasks are currently NOT sliced by page! All filtered tasks are
-   * rendered simultaneously, regardless of currentPage.
-   * FIX: Slice the tasks array using:
-   * const startIndex = (currentPage - 1) * pageSize;
-   * const displayedTasks = filteredTasks.slice(startIndex, startIndex + pageSize);
-   * -------------------------------------------------------------
+   * ISSUE 6: Add pagination to the task list
+   * Compute slice boundaries for the current page.
    */
-  const displayedTasks = filteredTasks; // FIXME (Issue 6): Apply pagination slice
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const displayedTasks = filteredTasks.slice(startIndex, startIndex + pageSize);
+
+  const handlePageChange = (page) => {
+    const targetPage = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(targetPage);
+  };
 
   return (
     <div className="page-container">
@@ -113,10 +136,10 @@ export const TasksPage = () => {
 
           {/* Pagination Bar (Issue 6) */}
           <Pagination
-            currentPage={currentPage}
+            currentPage={safeCurrentPage}
             totalItems={filteredTasks.length}
             pageSize={pageSize}
-            onPageChange={(page) => setCurrentPage(page)}
+            onPageChange={handlePageChange}
           />
         </>
       )}
@@ -134,3 +157,4 @@ export const TasksPage = () => {
 };
 
 export default TasksPage;
+
