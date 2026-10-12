@@ -67,21 +67,19 @@ export const TaskForm = ({ initialData = null, onSubmit, isSubmitting = false })
     // 4. Form should show clear inline error messages and stop submission.
     // -------------------------------------------------------------
 
-    // -------------------------------------------------------------
-    // ISSUE 5 (TODO for Contributor): Complete Admin task assignment functionality
-    // BUG: The dropdown allows selecting a user, but the payload below
-    // omits `assignedTo`, so the task is saved without an assignee!
-    // FIX: Add `assignedTo: formData.assignedTo || null` to the submitted payload.
-    // -------------------------------------------------------------
+    // ISSUE 5: Complete Admin task assignment functionality
+    // Include assignedTo in submission payload if admin
     const payload = {
       title: formData.title,
       description: formData.description,
       status: formData.status,
       priority: formData.priority,
       dueDate: formData.dueDate || null,
-      // FIXME (Issue 5): Currently omitting assignedTo:
-      // assignedTo: formData.assignedTo || null,
     };
+
+    if (isAdmin) {
+      payload.assignedTo = formData.assignedTo || null;
+    }
 
     try {
       await onSubmit(payload);
