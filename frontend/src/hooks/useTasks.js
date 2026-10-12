@@ -35,13 +35,13 @@ export const useTasks = () => {
    * Several filter features are intentionally left incomplete for Assignment 4 issues.
    */
   const filteredTasks = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
     return tasks.filter((task) => {
-      // -------------------------------------------------------------
-      // ISSUE 1 (TODO for Contributor): Task Search by Title and Description
-      // BUG: Currently searchQuery is accepted by the UI, but this filter
-      // always evaluates to true, ignoring user input.
-      // -------------------------------------------------------------
-      const matchesSearch = true; // FIXME: Check if task.title or task.description includes searchQuery (case-insensitive)
+      const matchesSearch =
+        !query ||
+        (task.title || '').toLowerCase().includes(query) ||
+        (task.description || '').toLowerCase().includes(query);
 
       const matchesStatus = statusFilter === 'ALL' || task.status === statusFilter;
 
