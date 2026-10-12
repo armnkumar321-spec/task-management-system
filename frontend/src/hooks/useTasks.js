@@ -43,12 +43,7 @@ export const useTasks = () => {
       // -------------------------------------------------------------
       const matchesSearch = true; // FIXME: Check if task.title or task.description includes searchQuery (case-insensitive)
 
-      // -------------------------------------------------------------
-      // ISSUE 2 (TODO for Contributor): Task Status Filter
-      // BUG: The status filter dropdown changes state, but this check
-      // always evaluates to true instead of matching task.status === statusFilter.
-      // -------------------------------------------------------------
-      const matchesStatus = true; // FIXME: When statusFilter !== 'ALL', match task.status === statusFilter
+      const matchesStatus = statusFilter === 'ALL' || task.status === statusFilter;
 
       // -------------------------------------------------------------
       // ISSUE 3 (TODO for Contributor): Priority Filter
